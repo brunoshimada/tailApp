@@ -28,4 +28,9 @@ public class Splits {
         return MessageFormat.format(pattern, " ");
     }
 
+    public static boolean isSplit(final String input) {
+        return caracteresDeSeparacaoDePalavra.contains(input);
+    }
+
+
 }

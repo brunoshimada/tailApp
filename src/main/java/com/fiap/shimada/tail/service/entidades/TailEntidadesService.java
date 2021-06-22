@@ -34,8 +34,8 @@ public class TailEntidadesService {
             }
 
             final char c = palavraAtual.charAt(palavraAtual.length() - 1);
-            if (String.valueOf(c).equals(".")) {
-                if (aux.isEmpty() && Character.isUpperCase(palavraAtual.charAt(0))) {
+            if (Splits.isSplit(String.valueOf(c))) {
+                if (Character.isUpperCase(palavraAtual.charAt(0))) {
                     aux.add(cleanBeforeInsert(palavraAtual));
                 }
                 entidades.add(String.join(" ", aux));

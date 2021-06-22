@@ -229,7 +229,8 @@ public class StopWords {
         "teriam",
         "aqui",
         "assim",
-        "desta"
+        "desta",
+        "sobre"
     );
 
 
