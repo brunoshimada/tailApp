@@ -23,4 +23,9 @@ public class Splits {
         return MessageFormat.format(pattern, part);
     }
 
+    public static String obterCaracteresDeSeparacaoEntidade() {
+        final String pattern = "[{0}]";
+        return MessageFormat.format(pattern, " ");
+    }
+
 }

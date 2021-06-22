@@ -6,6 +6,7 @@ import com.fiap.shimada.tail.service.entidades.TailEntidadesService;
 import com.fiap.shimada.tail.service.palavrasestatistica.TailPalavrasEstatisticaService;
 import com.fiap.shimada.tail.service.retornador.strategy.IRetornadorDeLista;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,30 +32,31 @@ public class TailService {
         final List<PalavraChave> estatistico = tailPalavrasEstatisticaService.gerarPalavrasChaveEstatistico(form);
         final List<PalavraChave> entidades = tailEntidadesService.gerarPalavrasEntidades(form);
 
-        final List<PalavraChave> estatisticoRecalculado = estatistico.stream()
-                                               .map(palavraChave -> {
-                                                   final String palavra = palavraChave.getPalavra();
+        estatistico.forEach(palavraChave -> {
+            final String palavra = palavraChave.getPalavra();
+            final List<Integer> levenshteinDistance = entidades.stream()
+                                                          .filter(entidade -> entidade.getPalavra().toLowerCase().contains(palavra))
+                                                          .map(entidadeSimilar -> StringUtils.getLevenshteinDistance(entidadeSimilar.getPalavra(), palavra))
+                                                          .collect(Collectors.toList());
 
-                                                   final List<PalavraChave> entidadesDaPalavra = entidades.stream().filter(entidade -> entidade.getPalavra().toLowerCase().contains(palavra)).collect(Collectors.toList());
+            final int divideBy = levenshteinDistance.size() > 0 ? levenshteinDistance.size() : 1;
+            final int simpleMedian = levenshteinDistance.stream().reduce(0, Integer::sum) / divideBy;
 
-                                                   final int frequenciaNasEntidades = entidadesDaPalavra.size();
+            entidades.stream()
+                .filter(entidade -> entidade.getPalavra().toLowerCase().contains(palavra))
+                .filter(entidade -> StringUtils.getLevenshteinDistance(entidade.getPalavra(), palavra) <= simpleMedian)
+                .forEach(entidade -> {
+                entidade.setQuantidade(palavraChave.getQuantidade());
+            });
+        });
 
-                                                   entidades.stream().filter(entidade -> entidade.getPalavra().toLowerCase().contains(palavra)).forEach(entidade -> {
-                                                       entidade.setQuantidade(entidade.getQuantidade() + frequenciaNasEntidades);
-                                                   });
-
-                                                   final long novaQuantidade = frequenciaNasEntidades > 0 ? palavraChave.getQuantidade() * frequenciaNasEntidades : palavraChave.getQuantidade();
-
-                                                   return new PalavraChave(
-                                                       palavra,
-                                                       novaQuantidade
-                                                   );
-                                               })
-                                               .sorted(Comparator.comparing(PalavraChave::getQuantidade).reversed())
-                                               .collect(Collectors.toList());
+        final List<PalavraChave> estatisticoFiltradoEntidade = estatistico.stream().filter(palavraChave -> {
+            final String palavra = palavraChave.getPalavra();
+            return !entidades.stream().anyMatch(entidade -> entidade.getPalavra().equalsIgnoreCase(palavra) || entidade.getPalavra().toLowerCase().contains(palavra));
+        }).collect(Collectors.toList());
 
         final List<PalavraChave> resultado = new ArrayList<>();
-        resultado.addAll(estatisticoRecalculado);
+        resultado.addAll(estatisticoFiltradoEntidade);
         resultado.addAll(entidades);
 
         final IRetornadorDeLista retornadorDeLista = retornadores.stream()

@@ -33,7 +33,23 @@ public class TailEntidadesService {
                 continue;
             }
 
+            final char c = palavraAtual.charAt(palavraAtual.length() - 1);
+            if (String.valueOf(c).equals(".")) {
+                if (aux.isEmpty() && Character.isUpperCase(palavraAtual.charAt(0))) {
+                    aux.add(cleanBeforeInsert(palavraAtual));
+                }
+                entidades.add(String.join(" ", aux));
+                aux.clear();
+                continue;
+            }
+
             if (!Character.isUpperCase(palavraAtual.charAt(0)) && aux.isEmpty()) {
+                continue;
+            }
+
+            if (!Character.isUpperCase(palavraAtual.charAt(0)) && !aux.isEmpty() && palavraAtual.length() > 4) {
+                entidades.add(String.join(" ", aux));
+                aux.clear();
                 continue;
             }
 
@@ -43,7 +59,7 @@ public class TailEntidadesService {
                 if (nextAhead < palavras.size()) {
                     final String nextAheadPalavra = palavras.get(nextAhead);
                     if (Character.isUpperCase(nextAheadPalavra.charAt(0))) {
-                        aux.add(palavraAtual);
+                        aux.add(cleanBeforeInsert(palavraAtual));
                         continue;
                     } else {
                         if (aux.size() == 1) {
@@ -58,7 +74,7 @@ public class TailEntidadesService {
                 }
             }
 
-            aux.add(palavraAtual);
+            aux.add(cleanBeforeInsert(palavraAtual));
         }
 
         return entidades.stream()
@@ -74,10 +90,14 @@ public class TailEntidadesService {
     private List<String> prepararTexto(final String textoEntrada) {
         final Predicate<String> stringValida = s -> !s.isEmpty();
 
-        return Arrays.stream(textoEntrada.split(Splits.obterCaracteresDeSeparacao()))
+        return Arrays.stream(textoEntrada.split(Splits.obterCaracteresDeSeparacaoEntidade()))
                    .filter(stringValida)
                    .map(CaracteresEspeciais::limparCaracteresEspeciaisComposto)
                    .filter(stringValida)
                    .collect(Collectors.toList());
+    }
+
+    private String cleanBeforeInsert(final String string) {
+        return CaracteresEspeciais.limparCaracteresEspeciais(string);
     }
 }
